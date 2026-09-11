@@ -55,7 +55,7 @@ const inputCircuitJson: AnyCircuitElement[] = obstacles.map((obstacle, i) => ({
   height: obstacle.height,
 }))
 
-test("repro: multilayer ijump makes a wild jump away from two conjoined obstacles", () => {
+test("repro: multilayer ijump avoids wild jumps near conjoined obstacles", () => {
   const autorouter = new MultilayerIjump({
     input: input as any,
     VIA_COST: 1,
@@ -66,6 +66,15 @@ test("repro: multilayer ijump makes a wild jump away from two conjoined obstacle
   const solution = autorouter.solveAndMapToTraces()
 
   expect(solution).toHaveLength(1)
+  expect(
+    solution[0].route.every(
+      (point) =>
+        point.x >= input.bounds.minX &&
+        point.x <= input.bounds.maxX &&
+        point.y >= input.bounds.minY &&
+        point.y <= input.bounds.maxY,
+    ),
+  ).toBe(true)
   expect(
     getDebugSvg({
       inputCircuitJson,

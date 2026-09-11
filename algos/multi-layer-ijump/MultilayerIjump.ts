@@ -490,12 +490,30 @@ export class MultilayerIjump extends GeneralizedAstarAutorouter {
           }
         }
         if (travelDir.wallDistance === Infinity) {
-          travelDirs3.push({
-            ...travelDir,
-            travelDistance: goalDistAlongTravelDir,
-            enterMarginCost: 0,
-            travelMarginCostFactor: 1,
-          })
+          // Keep an open detour inside the routing bounds. Using the complete
+          // goal distance here can create a wild jump away from the goal.
+          const { minX, maxX, minY, maxY } = this.input.bounds
+          const distanceToBound =
+            travelDir.dx < 0
+              ? node.x - minX
+              : travelDir.dx > 0
+                ? maxX - node.x
+                : travelDir.dy < 0
+                  ? node.y - minY
+                  : maxY - node.y
+          const boundedTravelDistance = Math.min(
+            goalDistAlongTravelDir,
+            distanceToBound,
+          )
+
+          if (boundedTravelDistance > 0) {
+            travelDirs3.push({
+              ...travelDir,
+              travelDistance: boundedTravelDistance,
+              enterMarginCost: 0,
+              travelMarginCostFactor: 1,
+            })
+          }
         } else if (travelDir.wallDistance > this.largestMargin) {
           for (const { margin, enterCost, travelCostFactor } of this
             .marginsWithCosts) {
